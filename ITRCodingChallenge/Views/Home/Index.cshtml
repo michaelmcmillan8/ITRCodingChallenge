@@ -1,0 +1,80 @@
+﻿@model TableViewModel
+
+<style>
+    #dataTable thead tr {
+        background-color: #87caf0;
+        color: #fff;
+    }
+</style>
+
+<!-- Tabs -->
+<ul class="nav nav-tabs" id="tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a class="nav-link active" href="#table" data-toggle="tab" role="tab">Table</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" href="#graph" data-toggle="tab" role="tab">Graph</a>
+    </li>
+</ul>
+
+<div class="tab-content" id="tabContent">
+    <!-- Table tab -->
+    <div class="tab-pane show active" id="table" role="tabpanel">
+        <p>This tab generates a table with 1-30 rows, each row containing a number ranging from 1-10000.</p>
+
+        <table id="dataTable" class="display" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Number</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int x = 0; x < Model.TableNumbers.Count; x++)
+                {
+                    <tr><td>@Model.TableNumbers[x]</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Graph tab -->
+    <div class="tab-pane" id="graph" role="tabpanel">
+        <p>This tab generates a graph showing each of the randomly generated numbers over a two-week period.</p>
+        <div id="plot" style="max-width:100%; margin: auto;"></div>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        // Create data table
+        $('#dataTable').DataTable();
+
+        // Creates the graph AFTER the tab is shown, otherwise the graph won't be responsive
+        $('a[href="#graph"]').on("shown.bs.tab", function () {
+            let yAxis = @Html.Raw(Json.Serialize(Model.TableNumbers));
+            let xAxis = [];
+
+            let startDate = new Date();
+            let endDate = new Date();
+
+            startDate.setDate(endDate.getDate() - 14);
+
+            // Have to calculate the x-axis interval of two weeks over the number of values in the y-axis
+            let twoWeeks = endDate.getTime() - startDate.getTime();
+            let interval = twoWeeks / yAxis.length;
+
+            for (let x = 0; x < yAxis.length; x++) {
+                let newDate = new Date(startDate.getTime() + x * interval);
+                xAxis.push(newDate);
+            }
+
+            let plot = document.getElementById('plot');
+            Plotly.newPlot(plot, [{
+                x: xAxis,
+                y: yAxis
+            }], {}, {
+                responsive: true
+            });
+        })
+    </script>
+} 
